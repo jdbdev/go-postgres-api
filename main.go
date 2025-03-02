@@ -21,18 +21,19 @@ type routeResponse struct {
 func main() {
 	log.Println("starting server...")
 	// Middleware Chain:
-	alice.New(loggingMiddleware())
+	
 	// http Router:
 	log.Println("setting up routes...")
 	router := mux.NewRouter()
-	router.HandleFunc("/", indexPage).Methods("GET")
-	router.HandleFunc("/users/register", register).Methods("POST")
-	router.HandleFunc("/users/login", login).Methods("POST")
-	router.HandleFunc("/projects", getProjects).Methods("GET")
-	router.HandleFunc("/projects/{id}", getProject).Methods("GET")
-	router.HandleFunc("/projects", createProject).Methods("POST")
-	router.HandleFunc("/projects/{id}", updateProject).Methods("PUT")
-	router.HandleFunc("/projects/{id}", deleteProject).Methods("DELETE")
+	// Handle and middleware chaining (Alice):
+	router.Handle("/", alice.New(loggingMiddleware).ThenFunc(indexPage)).Methods("GET")
+	router.Handle("/users/register", alice.New(loggingMiddleware).ThenFunc(register)).Methods("POST")
+	router.Handle("/users/login", alice.New(loggingMiddleware).ThenFunc(login)).Methods("POST")
+	router.Handle("/projects", alice.New(loggingMiddleware).ThenFunc(getProjects)).Methods("GET")
+	router.Handle("/projects/{id}", alice.New(loggingMiddleware).ThenFunc(getProject)).Methods("GET")
+	router.Handle("/projects", alice.New(loggingMiddleware).ThenFunc(createProject)).Methods("POST")
+	router.Handle("/projects/{id}", alice.New(loggingMiddleware).ThenFunc(updateProject)).Methods("PUT")
+	router.Handle("/projects/{id}", alice.New(loggingMiddleware).ThenFunc(deleteProject)).Methods("DELETE")
 
 	// http server:
 	log.Println("listening on port 8000...")
