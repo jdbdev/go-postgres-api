@@ -6,12 +6,15 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+
+	"github.com/gorilla/mux"
 )
 
 // STRUCTS
 
 type routeResponse struct {
 	Message string `json:"message"`
+	ID string `json:"id,omitempty"`
 }
 
 func main() {
@@ -19,12 +22,16 @@ func main() {
 
 	// http Router:
 	log.Println("setting up routes...")
-	router := http.NewServeMux()
-	router.HandleFunc("GET /", indexPage)
-	router.HandleFunc("POST /users/register", register)
-	router.HandleFunc("POST /users/login", login)
-	router.HandleFunc("POST /projects/create", createProject)
-	router.HandleFunc("POST /projects/update", updateProject)
+	// router := http.NewServeMux()
+	router := mux.NewRouter()
+	router.HandleFunc("/", indexPage).Methods("GET")
+	router.HandleFunc("/users/register", register).Methods("POST")
+	router.HandleFunc("/users/login", login).Methods("POST")
+	router.HandleFunc("/projects", getProjects).Methods("GET")
+	router.HandleFunc("/projects/{id}", getProject).Methods("GET")
+	router.HandleFunc("/projects", createProject).Methods("POST")
+	router.HandleFunc("/projects/{id}", updateProject).Methods("PUT")
+	router.HandleFunc("/projects/{id}", deleteProject).Methods("DELETE")
 
 	// http server:
 	log.Println("listening on port 8000...")
@@ -77,12 +84,35 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(routeResponse{Message: "Create Project Page"})
 }
 
-// Project - Update (PUT):
-func updateProject(w http.ResponseWriter, r *http.Request) {
+
+// Project - Get all projects (GET):
+func getProjects(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	json.NewEncoder(w).Encode(routeResponse{Message: "Update Project Page"})
+	json.NewEncoder(w).Encode(routeResponse{Message: "Get all projects page"})
 }
 
-// Project - Get all projects:
-// Project - Get project instance:
-// Project - Delete project:
+// Project - Get project instance (GET):
+func getProject(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	json.NewEncoder(w).Encode(routeResponse{Message: "Get project page", ID: id})
+}
+
+// Project - Update (PUT):
+func updateProject(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	json.NewEncoder(w).Encode(routeResponse{Message: "Update Project Page", ID:id})
+}
+
+// Project - Delete project (DELETE):
+func deleteProject(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	json.NewEncoder(w).Encode(routeResponse{Message: "Delete project page", ID:id})
+}
+
+
