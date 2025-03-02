@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 )
 
 // STRUCTS
@@ -19,10 +20,10 @@ type routeResponse struct {
 
 func main() {
 	log.Println("starting server...")
-
+	// Middleware Chain:
+	alice.New(loggingMiddleware())
 	// http Router:
 	log.Println("setting up routes...")
-	// router := http.NewServeMux()
 	router := mux.NewRouter()
 	router.HandleFunc("/", indexPage).Methods("GET")
 	router.HandleFunc("/users/register", register).Methods("POST")
@@ -41,7 +42,15 @@ func main() {
 	}
 }
 
-// MIDDLEWARE:
+// MIDDLEWARE (chaining using Alice package):
+
+func loggingMiddleware(next http.Handler) http.Handler{
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		// Parse values from Request: 
+		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		next.ServeHTTP(w,r)
+	})
+}
 
 // HANDLER FUNCTIONS:
 
@@ -83,7 +92,6 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	json.NewEncoder(w).Encode(routeResponse{Message: "Create Project Page"})
 }
-
 
 // Project - Get all projects (GET):
 func getProjects(w http.ResponseWriter, r *http.Request) {
